@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: StrimziReplicas
+metadata:
+  name: strimzi-replicas
+spec:
+  match:
+    kinds:
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaTopic"]
+  parameters:
+    min-replicas: 3
+    min-insync-replicas: 2

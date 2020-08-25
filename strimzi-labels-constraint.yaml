@@ -1,0 +1,13 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: StrimziLabels
+metadata:
+  name: strimzi-labels
+spec:
+  match:
+    kinds:
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaTopic"]
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaUser"]
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaConnector"]

@@ -1,0 +1,15 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: strimzi-cluster-label
+spec:
+  match:
+    kinds:
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaTopic"]
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaUser"]
+      - apiGroups: ["kafka.strimzi.io"]
+        kinds: ["KafkaConnector"]
+  parameters:
+    labels: ["strimzi.io/cluster"]

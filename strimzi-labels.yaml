@@ -1,0 +1,62 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: strimzilabels
+spec:
+  crd:
+    spec:
+      names:
+        kind: StrimziLabels
+        listKind: StrimziLabelsList
+        plural: StrimziLabels
+        singular: StrimziLabel
+      # validation:
+      #   # Schema for the `parameters` field
+      #   openAPIV3Schema:
+      #     properties:
+      #       labels:
+      #         type: array
+      #         items: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package strimzilabels
+
+        cluster := input.review.object.metadata.labels["strimzi.io/cluster"]
+        ns := input.review.object.metadata.namespace
+
+        violation[{"msg": msg}] {
+          not valid_topic
+          not valid_user
+          not valid_connector
+          
+          msg := "strimzi.io/cluster label must contain one of the existing clusters"
+        }
+
+        valid_topic {
+          is_topic
+          data.inventory.namespace[ns]["kafka.strimzi.io/v1beta1"]["Kafka"][cluster]
+        }
+
+        valid_user {
+          is_user
+          data.inventory.namespace[ns]["kafka.strimzi.io/v1beta1"]["Kafka"][cluster]
+        }
+
+        valid_connector {
+          is_connector
+          data.inventory.namespace[ns]["kafka.strimzi.io/v1beta1"]["KafkaConnect"][cluster]
+          "true" == data.inventory.namespace[ns]["kafka.strimzi.io/v1beta1"]["KafkaConnect"][cluster]["metadata"]["annotations"]["strimzi.io/use-connector-resources"]
+        }
+
+        is_topic {
+          input.review.object.kind == "KafkaTopic"
+        }
+
+        is_user {
+          input.review.object.kind == "KafkaUser"
+        }
+
+        is_connector {
+          input.review.object.kind == "KafkaConnector"
+        }

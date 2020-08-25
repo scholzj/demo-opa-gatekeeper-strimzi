@@ -1,0 +1,42 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: strimzireplicas
+spec:
+  crd:
+    spec:
+      names:
+        kind: StrimziReplicas
+        listKind: StrimziReplicasList
+        plural: StrimziReplicas
+        singular: StrimziReplicas
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          properties:
+            min-replicas:
+              type: integer
+            min-insync-replicas:
+              type: integer
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package strimzireplicas
+
+        violation[{"msg": msg}] {
+          not has_enough
+          msg := sprintf("Topic must have at least %v replicas and %v min.insync.replicas", [input.parameters["min-replicas"], input.parameters["min-insync-replicas"]])
+        }
+        
+        has_enough {
+          has_enough_replicas
+          has_enough_insync_replicas
+        }
+        
+        has_enough_replicas {
+          input.review.object.spec["replicas"] >= input.parameters["min-replicas"]
+        }
+        
+        has_enough_insync_replicas {
+          input.review.object.spec.config["min.insync.replicas"] >= input.parameters["min-insync-replicas"]
+        }
